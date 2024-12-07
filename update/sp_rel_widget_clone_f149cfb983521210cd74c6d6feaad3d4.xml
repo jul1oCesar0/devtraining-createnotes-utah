@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_rel_widget_clone">
+    <sp_rel_widget_clone action="INSERT_OR_UPDATE">
+        <child display_value="Copy of Add Widget">2d49077983521210cd74c6d6feaad37f</child>
+        <cloned>2024-12-06 22:08:52</cloned>
+        <last_validated>2024-12-06 22:08:52</last_validated>
+        <parent display_value="Add Widget">32366e885b1112000d7ec7ad31f91a51</parent>
+        <payload>&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;sp_widget&gt;&lt;category&gt;sp_platform&lt;/category&gt;&lt;client_script&gt;&lt;![CDATA[function($location, $rootScope) {
+	var c = this;
+	
+	function format(value) {		
+		if (!value)
+			return "";
+		
+		return value.toLowerCase()
+			.replace(/[^a-z0-9\-]/gi,'_')
+			.replace(/^-|-$/g, '');		
+	}
+	
+	c.submit = function() {
+		c.server.update().then(function(response) {
+			if (c.data.invalidWidgetID || c.data.invalidPageID)
+				return;
+
+			$rootScope.$broadcast('$sp.widget-close-modal');
+			var s = $location.search();
+			s.sys_id = c.data.sys_id;
+			c.redirecting = true;
+			$location.search(s).replace();
+		});
+	}
+	c.fixID = function(id) {
+		if (!id) return;
+		c.data.id = format(id.toString());
+	}
+	
+	c.fixPageID = function(id) {
+		if (!id) return;
+		c.data.test_page_id = format(id.toString());
+	}
+
+	// Automatically provide an ID that is based on the name of the widget
+	c.updateID = function() {
+		c.data.invalidWidgetID = false;
+		c.data.invalidPageID = false;
+		c.data.id = format(c.data.name);		
+		c.data.test_page_id = format(c.data.name);
+	}
+	
+	c.clearInvalidWidgetIDMsg = function() {
+		c.data.invalidWidgetID = false;
+	}
+
+	c.clearInvalidPageIDMsg = function() {
+		c.data.invalidPageID = false;
+	}
+
+}]]&gt;&lt;/client_script&gt;&lt;controller_as&gt;c&lt;/controller_as&gt;&lt;css&gt;.error {
+  color: #f95050;
+}
+
+.form-control.ng-invalid {
+  border: 1px solid #f95050;
+}
+
+.add-widget-invalid-id {
+  color: #641e1b;
+}&lt;/css&gt;&lt;data_table&gt;sp_instance&lt;/data_table&gt;&lt;demo_data/&gt;&lt;description/&gt;&lt;docs/&gt;&lt;field_list/&gt;&lt;has_preview&gt;false&lt;/has_preview&gt;&lt;id&gt;widget-add-new&lt;/id&gt;&lt;internal&gt;true&lt;/internal&gt;&lt;link/&gt;&lt;name&gt;Add Widget&lt;/name&gt;&lt;option_schema/&gt;&lt;public&gt;false&lt;/public&gt;&lt;roles&gt;sp_admin&lt;/roles&gt;&lt;script&gt;&lt;![CDATA[(function() {
+	
+data.pageIDRequiredMsg = gs.getMessage("Page ID (Required)");
+data.widgetNameRequiredMsg = gs.getMessage("Widget Name (Required)");
+data.widgetIDRequiredMsg = gs.getMessage("Widget ID (Required)");
+
+function saveWidget(input) {
+	data.invalidWidgetID = false;
+	data.invalidPageID = false;
+
+	// if either widget or page ID exists, do nothing and show msg
+	var widgetGR = new GlideRecord("sp_widget");
+	widgetGR.query("id", input.id);
+	if (widgetGR.hasNext())
+		data.invalidWidgetID = true;
+
+	if (input.createTestPage) {
+		var pageGR = new GlideRecord("sp_page");
+		pageGR.query("id", input.test_page_id);
+		if (pageGR.hasNext())
+			data.invalidPageID = true;
+	}
+
+	if (data.invalidPageID || data.invalidWidgetID)
+		return;
+	
+	widgetGR.initialize();
+	widgetGR.setValue("id", input.id);
+	widgetGR.setValue("name", input.name);
+	data.sys_id = widgetGR.insert();
+
+	if (input.createTestPage) {
+		var newPageGR = new GlideRecord("sp_page");
+		newPageGR.setValue("id", input.test_page_id);
+		newPageGR.setValue("title", input.name + " - Test Page");
+		var newPageID = newPageGR.insert();
+
+		var containerGR = new GlideRecord("sp_container");
+		containerGR.initialize();
+		containerGR.sp_page = newPageID;
+		var newContainerID = containerGR.insert();
+
+		var rowGR = new GlideRecord("sp_row");
+		rowGR.initialize();
+		rowGR.sp_container = newContainerID;
+		var newRowID = rowGR.insert();
+
+		var colGR = new GlideRecord("sp_column");
+		colGR.initialize();
+		colGR.sp_row = newRowID;
+		var newColID = colGR.insert();
+
+		var instanceGR = new GlideRecord("sp_instance");
+		instanceGR.initialize();
+		instanceGR.sp_column = newColID;
+		instanceGR.sp_widget = data.sys_id;
+		instanceGR.insert();
+	}
+}
+
+if (input)
+	saveWidget(input);	
+	
+})();]]&gt;&lt;/script&gt;&lt;servicenow&gt;true&lt;/servicenow&gt;&lt;sys_class_name&gt;sp_widget&lt;/sys_class_name&gt;&lt;sys_created_by&gt;admin&lt;/sys_created_by&gt;&lt;sys_created_on&gt;2016-01-27 05:05:57&lt;/sys_created_on&gt;&lt;sys_id&gt;32366e885b1112000d7ec7ad31f91a51&lt;/sys_id&gt;&lt;sys_mod_count&gt;135&lt;/sys_mod_count&gt;&lt;sys_name&gt;Add Widget&lt;/sys_name&gt;&lt;sys_package display_value="Service Portal - Core" source="com.glide.service-portal"&gt;386d4bd7d1e302104f34ba60d8b7c1bb&lt;/sys_package&gt;&lt;sys_policy/&gt;&lt;sys_scope display_value="Global"&gt;global&lt;/sys_scope&gt;&lt;sys_update_name&gt;sp_widget_32366e885b1112000d7ec7ad31f91a51&lt;/sys_update_name&gt;&lt;sys_updated_by&gt;admin&lt;/sys_updated_by&gt;&lt;sys_updated_on&gt;2019-01-16 15:19:40&lt;/sys_updated_on&gt;&lt;template&gt;&lt;![CDATA[&lt;form name="createWidget" ng-submit="c.submit()"&gt;
+  &lt;div class="form-group"&gt;
+    &lt;input required type="text" class="form-control" ng-change="c.updateID()" ng-required="true" name="name" ng-model="c.data.name" placeholder="{{::data.widgetNameRequiredMsg}}" /&gt;
+  &lt;/div&gt;
+  &lt;div class="form-group" ng-class="{'has-error': c.invalidID}"&gt;
+    &lt;input required type="text" class="form-control" ng-change="c.clearInvalidWidgetIDMsg()" ng-blur="c.fixID(c.data.id)" maxlength="40" name="id" ng-model="c.data.id" placeholder="{{::data.widgetIDRequiredMsg}}" /&gt;
+    &lt;span ng-if="c.data.invalidWidgetID" class="add-widget-invalid-id"&gt;
+      ${Widget ID already taken}
+    &lt;/span&gt;
+    &lt;div ng-if="!c.redirecting" class="m-t-xs"&gt;${Use only lowercase letters, numbers, underscores, and hyphens}&lt;/div&gt;
+    &lt;div ng-if="c.redirecting" class="m-t-xs"&gt;${New widget created, redirecting...}&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="checkbox"&gt;
+    &lt;label&gt;
+      &lt;input ng-model="c.data.createTestPage" type="checkbox" /&gt; ${Create test page}
+    &lt;/label&gt;
+  &lt;/div&gt;  
+  &lt;div ng-if="c.data.createTestPage" class="form-group"&gt;
+    &lt;input required type="text" class="form-control" ng-change="c.clearInvalidPageIDMsg()" ng-blur="c.fixPageID(c.data.test_page_id)" maxlength="40" name="test-page-id" ng-model="c.data.test_page_id" placeholder="{{::data.pageIDRequiredMsg}}" /&gt;
+    &lt;span ng-if="c.data.invalidPageID" class="add-widget-invalid-id"&gt;
+      ${Page ID already taken}
+    &lt;/span&gt;
+    &lt;div class="m-t-xs"&gt;${Use only lowercase letters, numbers, underscores, and hyphens}&lt;/div&gt;
+  &lt;/div&gt;  
+  &lt;button type="submit" class="btn btn-primary pull-right" ng-class="{'disabled': !createWidget.$valid}"&gt;${Submit}&lt;/button&gt;
+  &lt;div class="clearfix"&gt;&lt;/div&gt;
+&lt;/form&gt;]]&gt;&lt;/template&gt;&lt;/sp_widget&gt;</payload>
+        <sys_class_name>sp_rel_widget_clone</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-12-06 22:08:52</sys_created_on>
+        <sys_id>f149cfb983521210cd74c6d6feaad3d4</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>2d49077983521210cd74c6d6feaad37f</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_rel_widget_clone_f149cfb983521210cd74c6d6feaad3d4</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-12-06 22:08:52</sys_updated_on>
+    </sp_rel_widget_clone>
+</record_update>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sp_widget">
+    <sp_widget action="INSERT_OR_UPDATE">
+        <category>sp_platform</category>
+        <client_script><![CDATA[function($location, $rootScope) {
+	var c = this;
+	
+	function format(value) {		
+		if (!value)
+			return "";
+		
+		return value.toLowerCase()
+			.replace(/[^a-z0-9\-]/gi,'_')
+			.replace(/^-|-$/g, '');		
+	}
+	
+	c.submit = function() {
+		c.server.update().then(function(response) {
+			if (c.data.invalidWidgetID || c.data.invalidPageID)
+				return;
+
+			$rootScope.$broadcast('$sp.widget-close-modal');
+			var s = $location.search();
+			s.sys_id = c.data.sys_id;
+			c.redirecting = true;
+			$location.search(s).replace();
+		});
+	}
+	c.fixID = function(id) {
+		if (!id) return;
+		c.data.id = format(id.toString());
+	}
+	
+	c.fixPageID = function(id) {
+		if (!id) return;
+		c.data.test_page_id = format(id.toString());
+	}
+
+	// Automatically provide an ID that is based on the name of the widget
+	c.updateID = function() {
+		c.data.invalidWidgetID = false;
+		c.data.invalidPageID = false;
+		c.data.id = format(c.data.name);		
+		c.data.test_page_id = format(c.data.name);
+	}
+	
+	c.clearInvalidWidgetIDMsg = function() {
+		c.data.invalidWidgetID = false;
+	}
+
+	c.clearInvalidPageIDMsg = function() {
+		c.data.invalidPageID = false;
+	}
+
+}]]></client_script>
+        <controller_as>c</controller_as>
+        <css>.error {
+  color: #f95050;
+}
+
+.form-control.ng-invalid {
+  border: 1px solid #f95050;
+}
+
+.add-widget-invalid-id {
+  color: #641e1b;
+}</css>
+        <data_table>sp_instance</data_table>
+        <demo_data/>
+        <description/>
+        <docs/>
+        <field_list/>
+        <has_preview>false</has_preview>
+        <id/>
+        <internal>false</internal>
+        <link><![CDATA[function link(scope, element, attrs, controller) {  }]]></link>
+        <name>Copy of Add Widget</name>
+        <option_schema/>
+        <public>false</public>
+        <roles>sp_admin</roles>
+        <script><![CDATA[(function() {
+	
+data.pageIDRequiredMsg = gs.getMessage("Page ID (Required)");
+data.widgetNameRequiredMsg = gs.getMessage("Widget Name (Required)");
+data.widgetIDRequiredMsg = gs.getMessage("Widget ID (Required)");
+
+function saveWidget(input) {
+	data.invalidWidgetID = false;
+	data.invalidPageID = false;
+
+	// if either widget or page ID exists, do nothing and show msg
+	var widgetGR = new GlideRecord("sp_widget");
+	widgetGR.query("id", input.id);
+	if (widgetGR.hasNext())
+		data.invalidWidgetID = true;
+
+	if (input.createTestPage) {
+		var pageGR = new GlideRecord("sp_page");
+		pageGR.query("id", input.test_page_id);
+		if (pageGR.hasNext())
+			data.invalidPageID = true;
+	}
+
+	if (data.invalidPageID || data.invalidWidgetID)
+		return;
+	
+	widgetGR.initialize();
+	widgetGR.setValue("id", input.id);
+	widgetGR.setValue("name", input.name);
+	data.sys_id = widgetGR.insert();
+
+	if (input.createTestPage) {
+		var newPageGR = new GlideRecord("sp_page");
+		newPageGR.setValue("id", input.test_page_id);
+		newPageGR.setValue("title", input.name + " - Test Page");
+		var newPageID = newPageGR.insert();
+
+		var containerGR = new GlideRecord("sp_container");
+		containerGR.initialize();
+		containerGR.sp_page = newPageID;
+		var newContainerID = containerGR.insert();
+
+		var rowGR = new GlideRecord("sp_row");
+		rowGR.initialize();
+		rowGR.sp_container = newContainerID;
+		var newRowID = rowGR.insert();
+
+		var colGR = new GlideRecord("sp_column");
+		colGR.initialize();
+		colGR.sp_row = newRowID;
+		var newColID = colGR.insert();
+
+		var instanceGR = new GlideRecord("sp_instance");
+		instanceGR.initialize();
+		instanceGR.sp_column = newColID;
+		instanceGR.sp_widget = data.sys_id;
+		instanceGR.insert();
+	}
+}
+
+if (input)
+	saveWidget(input);	
+	
+})();]]></script>
+        <servicenow>false</servicenow>
+        <sys_class_name>sp_widget</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2024-12-06 22:08:51</sys_created_on>
+        <sys_id>2d49077983521210cd74c6d6feaad37f</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>Copy of Add Widget</sys_name>
+        <sys_package display_value="CreateNotes" source="x_snc_createnotes">df5fd9a5090232007f44e1046c8ff69f</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="CreateNotes">df5fd9a5090232007f44e1046c8ff69f</sys_scope>
+        <sys_update_name>sp_widget_2d49077983521210cd74c6d6feaad37f</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2024-12-06 22:08:51</sys_updated_on>
+        <template><![CDATA[<form name="createWidget" ng-submit="c.submit()">
+  <div class="form-group">
+    <input required type="text" class="form-control" ng-change="c.updateID()" ng-required="true" name="name" ng-model="c.data.name" placeholder="{{::data.widgetNameRequiredMsg}}" />
+  </div>
+  <div class="form-group" ng-class="{'has-error': c.invalidID}">
+    <input required type="text" class="form-control" ng-change="c.clearInvalidWidgetIDMsg()" ng-blur="c.fixID(c.data.id)" maxlength="40" name="id" ng-model="c.data.id" placeholder="{{::data.widgetIDRequiredMsg}}" />
+    <span ng-if="c.data.invalidWidgetID" class="add-widget-invalid-id">
+      ${Widget ID already taken}
+    </span>
+    <div ng-if="!c.redirecting" class="m-t-xs">${Use only lowercase letters, numbers, underscores, and hyphens}</div>
+    <div ng-if="c.redirecting" class="m-t-xs">${New widget created, redirecting...}</div>
+  </div>
+  <div class="checkbox">
+    <label>
+      <input ng-model="c.data.createTestPage" type="checkbox" /> ${Create test page}
+    </label>
+  </div>  
+  <div ng-if="c.data.createTestPage" class="form-group">
+    <input required type="text" class="form-control" ng-change="c.clearInvalidPageIDMsg()" ng-blur="c.fixPageID(c.data.test_page_id)" maxlength="40" name="test-page-id" ng-model="c.data.test_page_id" placeholder="{{::data.pageIDRequiredMsg}}" />
+    <span ng-if="c.data.invalidPageID" class="add-widget-invalid-id">
+      ${Page ID already taken}
+    </span>
+    <div class="m-t-xs">${Use only lowercase letters, numbers, underscores, and hyphens}</div>
+  </div>  
+  <button type="submit" class="btn btn-primary pull-right" ng-class="{'disabled': !createWidget.$valid}">${Submit}</button>
+  <div class="clearfix"></div>
+</form>]]></template>
+    </sp_widget>
+</record_update>
